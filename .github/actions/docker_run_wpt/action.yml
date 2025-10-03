@@ -21,7 +21,7 @@ inputs:
     required: true
 runs:
   using: 'docker'
-  image: bootstrap:${{ github.head_ref }}.${{ github.sha }}
+  image: bootstrap:${{ github.sha }}
   pre-entrypoint: 'bash -c "mkdir -p wpt-filtered-logs/linux && mkdir -p wpt-full-logs/linux"'
   entrypoint: './mach'
   args:
