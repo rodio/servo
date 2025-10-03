@@ -1,0 +1,4 @@
+target/**
+.venv/**
+.git/**
+support/crown/target/**
