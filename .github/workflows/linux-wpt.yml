@@ -45,7 +45,7 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           push: false
-          tags: bootstrap:${{ github.head_ref }}.${{ github.sha }}
+          tags: bootstrap:${{ github.sha }}
   linux-wpt:
     name: WPT
     runs-on: ubuntu-22.04
