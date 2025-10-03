@@ -1,0 +1,41 @@
+# action.yml
+name: 'Run Linux WPT in a container'
+inputs:
+  chunk_id:
+    description: 'ID of the chunk to run'
+    required: true
+  profile:
+    description: 'Servo profile (ebug, release, ...)'
+    required: true
+  processes:
+    description: '--processes for ./mach'
+    required: false
+  number-of-wpt-chunks:
+    description: '--total-chunks for ./mach'
+    required: true
+  always_succeed:
+    description: 'TODO'
+    required: false
+  wpt-args:
+    description: 'TODO'
+    required: true
+runs:
+  using: 'docker'
+  image: bootstrap:${{ github.head_ref }}.${{ github.sha }}
+  pre-entrypoint: 'bash -c "mkdir -p wpt-filtered-logs/linux && mkdir -p wpt-full-logs/linux"'
+  entrypoint: './mach'
+  args:
+    # TODO ALWAYS SUCCEED
+    - 'test-wpt'
+    - --${{ inputs.profile }}
+    # TODO - '--processes $(nproc)'
+    - --timeout-multiplier 2
+    - --total-chunks ${{ inputs.number-of-wpt-chunks }}
+    - --this-chunk ${{ input.chunk_id }}
+    - --log-raw wpt-full-logs/linux/raw/${{ inputs.log_raw }}.log
+    - --log-wptreport wpt-full-logs/linux/wptreport/${{ inputs.chunk_id }}.json 
+    - --log-raw-unexpected wpt-filtered-logs/linux/${{ inputs.chunk_id }}.log 
+    - --filter-intermittents wpt-filtered-logs/linux/${{ inputs.chunk_id }}.json
+    - ${{ inputs.wpt-args }}
+  env:
+    GITHUB_CONTEXT: ${{ toJson(github) }}

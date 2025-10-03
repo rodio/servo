@@ -39,10 +39,17 @@ jobs:
         with:
           script: |
             return Array.from({length: ${{ inputs.number-of-wpt-chunks }}}, (_, i) => i + 1)
+  bootstrap-docker:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: docker/build-push-action@v6
+        with:
+          push: false
+          tags: bootstrap:${{ github.head_ref }}.${{ github.sha }}
   linux-wpt:
     name: WPT
     runs-on: ubuntu-22.04
-    needs: chunks
+    needs: [chunks, bootstrap-docker]
     strategy:
       fail-fast: false
       matrix:
@@ -62,35 +69,16 @@ jobs:
           path: ${{ inputs.profile }}-binary-linux
       - name: unPackage binary
         run: tar -xzf ${{ inputs.profile }}-binary-linux/target.tar.gz
-      - name: Setup Python
-        uses: ./.github/actions/setup-python
-      - name: Change Mirror Priorities
-        uses: ./.github/actions/apt-mirrors
-      - name: Bootstrap dependencies
-        timeout-minutes: 10
-        run: |
-          sudo apt update
-          sudo apt install -qy --no-install-recommends mesa-vulkan-drivers fonts-noto-cjk
-          ./mach bootstrap --skip-lints
       - name: Sync from upstream WPT
         if: ${{ inputs.wpt-sync-from-upstream }}
         run: |
           ./mach update-wpt --sync --patch
-      - name: Run tests
-        run: |
-          mkdir -p wpt-filtered-logs/linux
-          mkdir -p wpt-full-logs/linux
-          ./mach test-wpt \
-            $WPT_ALWAYS_SUCCEED_ARG \
-            --${{ inputs.profile }} --processes $(nproc) --timeout-multiplier 2 \
-            --total-chunks ${{ inputs.number-of-wpt-chunks }} --this-chunk ${{ matrix.chunk_id }} \
-            --log-raw wpt-full-logs/linux/raw/${{ matrix.chunk_id }}.log \
-            --log-wptreport wpt-full-logs/linux/wptreport/${{ matrix.chunk_id }}.json \
-            --log-raw-unexpected wpt-filtered-logs/linux/${{ matrix.chunk_id }}.log \
-            --filter-intermittents wpt-filtered-logs/linux/${{ matrix.chunk_id }}.json \
-            ${{ inputs.wpt-args }}
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
+      - uses: ./.github/actions/docker_run_wpt
+        with:
+          chunk_id: ${{ matrix.chunk_id }}
+          profile: ${{ inputs.profile }}
+          number-of-wpt-chunks: ${{ inputs.number-of-wpt-chunks }}
+          wpt-args: ${{ inputs.wpt-args }}
       - name: Archive results (filtered)
         uses: actions/upload-artifact@v4
         if: ${{ always() }}
