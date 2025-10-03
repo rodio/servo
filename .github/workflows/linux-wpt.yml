@@ -17,7 +17,6 @@ on:
         default: 20
         required: false
         type: number
-
 env:
   RUST_BACKTRACE: 1
   SHELL: /bin/bash
@@ -79,6 +78,7 @@ jobs:
           profile: ${{ inputs.profile }}
           number-of-wpt-chunks: ${{ inputs.number-of-wpt-chunks }}
           wpt-args: ${{ inputs.wpt-args }}
+          image-tag: ${{ github.sha }}
       - name: Archive results (filtered)
         uses: actions/upload-artifact@v4
         if: ${{ always() }}

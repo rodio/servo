@@ -19,9 +19,12 @@ inputs:
   wpt-args:
     description: 'TODO'
     required: true
+  image_tag:
+    description: 'TODO'
+    required: true
 runs:
   using: 'docker'
-  image: bootstrap:${{ github.sha }}
+  image: bootstrap:${{ intputs.image_tag }}
   pre-entrypoint: 'bash -c "mkdir -p wpt-filtered-logs/linux && mkdir -p wpt-full-logs/linux"'
   entrypoint: './mach'
   args:
@@ -31,11 +34,11 @@ runs:
     # TODO - '--processes $(nproc)'
     - --timeout-multiplier 2
     - --total-chunks ${{ inputs.number-of-wpt-chunks }}
-    - --this-chunk ${{ input.chunk_id }}
+    - --this-chunk ${{ inputs.chunk_id }}
     - --log-raw wpt-full-logs/linux/raw/${{ inputs.log_raw }}.log
     - --log-wptreport wpt-full-logs/linux/wptreport/${{ inputs.chunk_id }}.json 
     - --log-raw-unexpected wpt-filtered-logs/linux/${{ inputs.chunk_id }}.log 
     - --filter-intermittents wpt-filtered-logs/linux/${{ inputs.chunk_id }}.json
     - ${{ inputs.wpt-args }}
-  env:
-    GITHUB_CONTEXT: ${{ toJson(github) }}
+  # env:
+  #   GITHUB_CONTEXT: ${{ toJson(github) }}
