@@ -35,4 +35,4 @@ RUN \
   --mount=target=/root/.rustup,type=cache,sharing=locked \
   --mount=target=/root/.cargo,type=cache,sharing=locked \
   --mount=target=/root/.cache/uv,type=cache,sharing=locked\
-    ./mach bootstrap
+    ./mach bootstrap --skip-lints
