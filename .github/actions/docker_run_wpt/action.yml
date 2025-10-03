@@ -24,7 +24,7 @@ inputs:
     required: true
 runs:
   using: 'docker'
-  image: bootstrap:${{ intputs.image_tag }}
+  image: bootstrap:${{ inputs.image_tag }}
   pre-entrypoint: 'bash -c "mkdir -p wpt-filtered-logs/linux && mkdir -p wpt-full-logs/linux"'
   entrypoint: './mach'
   args:
