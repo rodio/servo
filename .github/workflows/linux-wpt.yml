@@ -48,7 +48,8 @@ jobs:
   linux-wpt:
     name: WPT
     runs-on: ubuntu-22.04
-    needs: [chunks, bootstrap-docker]
+    # needs: [chunks, bootstrap-docker]
+    needs: chunks 
     strategy:
       fail-fast: false
       matrix:
