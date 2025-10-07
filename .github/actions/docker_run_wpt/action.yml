@@ -32,13 +32,20 @@ runs:
     - 'test-wpt'
     - --${{ inputs.profile }}
     # TODO - '--processes $(nproc)'
-    - --timeout-multiplier 2
-    - --total-chunks ${{ inputs.number-of-wpt-chunks }}
-    - --this-chunk ${{ inputs.chunk_id }}
-    - --log-raw wpt-full-logs/linux/raw/${{ inputs.log_raw }}.log
-    - --log-wptreport wpt-full-logs/linux/wptreport/${{ inputs.chunk_id }}.json 
-    - --log-raw-unexpected wpt-filtered-logs/linux/${{ inputs.chunk_id }}.log 
-    - --filter-intermittents wpt-filtered-logs/linux/${{ inputs.chunk_id }}.json
+    - --timeout-multiplier
+    - 2
+    - --total-chunks
+    - ${{ inputs.number-of-wpt-chunks }}
+    - --this-chunk
+    - ${{ inputs.chunk_id }}
+    - --log-raw
+    - wpt-full-logs/linux/raw/${{ inputs.log_raw }}.log
+    - --log-wptreport
+    - wpt-full-logs/linux/wptreport/${{ inputs.chunk_id }}.json 
+    - --log-raw-unexpected
+    - wpt-filtered-logs/linux/${{ inputs.chunk_id }}.log 
+    - --filter-intermittents
+    - wpt-filtered-logs/linux/${{ inputs.chunk_id }}.json
     - ${{ inputs.wpt-args }}
   # env:
   #   GITHUB_CONTEXT: ${{ toJson(github) }}
