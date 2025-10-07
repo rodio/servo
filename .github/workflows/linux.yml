@@ -174,34 +174,25 @@ jobs:
           tool-cache: false
           large-packages: false
           swap-storage: false
-      - name: Set LIBCLANG_PATH env # needed for bindgen in mozangle
-        if: ${{ runner.environment != 'self-hosted' }}
-        run: echo "LIBCLANG_PATH=/usr/lib/llvm-14/lib" >> $GITHUB_ENV
-      - name: Setup Python
-        if: ${{ runner.environment != 'self-hosted' }}
-        uses: ./.github/actions/setup-python
-      - name: Change Mirror Priorities
-        if: ${{ runner.environment != 'self-hosted' }}
-        uses: ./.github/actions/apt-mirrors
-      - name: Bootstrap dependencies
-        if: ${{ runner.environment != 'self-hosted' }}
-        timeout-minutes: 10
-        run: |
-          sudo apt update
-          ./mach bootstrap --skip-lints
-
-      # Always install crown, even on self-hosted runners, because it is tightly
-      # coupled to the rustc version, and we may have the wrong version if the
-      # commit we are building uses a different rustc version.
-      - name: Install crown
-        run: cargo install --path support/crown
+      # - name: Set LIBCLANG_PATH env # needed for bindgen in mozangle
+      #   if: ${{ runner.environment != 'self-hosted' }}
+      #   run: echo "LIBCLANG_PATH=/usr/lib/llvm-14/lib" >> $GITHUB_ENV
 
       - name: Build (${{ inputs.profile }})
         run: |
-          ./mach build --use-crown --locked --${{ inputs.profile }} ${{ inputs.build-args }}
+          # Always install crown, even on self-hosted runners, because it is tightly
+          # coupled to the rustc version, and we may have the wrong version if the
+          # commit we are building uses a different rustc version.
+          cargo install --path support/crown && \
+          docker run --rm -v .:/root/src/servo ghcr.io/rodio/servo_bootstrap:latest \
+            ./mach build --use-crown --locked --${{ inputs.profile }} ${{ inputs.build-args }} && \
           cp -r target/cargo-timings target/cargo-timings-linux
+
       - name: Smoketest
-        run: xvfb-run ./mach smoketest --${{ inputs.profile  }}
+        run: |
+          docker run --rm -v .:/root/src/servo ghcr.io/rodio/servo_bootstrap:latest \
+            xvfb-run ./mach smoketest --${{ inputs.profile  }}
+
       - name: Script tests
         run: ./mach test-scripts
       - name: Unit tests
@@ -210,28 +201,34 @@ jobs:
         with:
           timeout_minutes: 20
           max_attempts: 2 # https://github.com/servo/servo/issues/30683
-          command: ./mach test-unit --${{ inputs.profile }}
+          command: docker run --rm -v .:/root/src/servo ghcr.io/rodio/servo_bootstrap:latest ./mach test-unit --${{ inputs.profile }}
+
       - name: Devtools tests
         if: ${{ inputs.unit-tests }}
-        run: ./mach test-devtools --${{ inputs.profile }}
+        run: docker run --rm -v .:/root/src/servo ghcr.io/rodio/servo_bootstrap:latest ./mach test-devtools --${{ inputs.profile }}
+
       - name: Archive build timing
         uses: actions/upload-artifact@v4
         with:
           name: cargo-timings-linux-${{ inputs.profile }}
           # Using a wildcard here ensures that the archive includes the path.
           path: target/cargo-timings-*
+
       - name: Build mach package
-        run: ./mach package --${{ inputs.profile }}
+        run: docker run --rm -v .:/root/src/servo ghcr.io/rodio/servo_bootstrap:latest ./mach package --${{ inputs.profile }}
+
       - name: Upload artifact for mach package
         uses: actions/upload-artifact@v4
         with:
           name: linux-${{ inputs.profile }}
           path: target/${{ inputs.profile }}/servo-tech-demo.tar.gz
+
       - name: Upload nightly
         if: ${{ inputs.upload }}
+        # TODO: secret from env
         run: |
-          ./mach upload-nightly linux \
-            --secret-from-environment \
+          docker run --rm -v .:/root/src/servo ghcr.io/rodio/servo_bootstrap:latest ./mach upload-nightly linux \
+            --secret-from-environment \ 
             --github-release-id ${{ inputs.github-release-id }}
         env:
           S3_UPLOAD_CREDENTIALS: ${{ secrets.S3_UPLOAD_CREDENTIALS }}
