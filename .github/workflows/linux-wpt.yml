@@ -74,12 +74,19 @@ jobs:
         run: |
           ./mach update-wpt --sync --patch
       - uses: ./.github/actions/docker_run_wpt
-        with:
-          chunk_id: ${{ matrix.chunk_id }}
-          profile: ${{ inputs.profile }}
-          number-of-wpt-chunks: ${{ inputs.number-of-wpt-chunks }}
-          wpt-args: ${{ inputs.wpt-args }}
-          image-tag: ${{ github.sha }}
+        run: |
+          mkdir -p wpt-filtered-logs/linux && mkdir -p wpt-full-logs/linux && \
+          docker run --rm -v .:/root/src/servo ghcr.io/rodio/servo_bootstrap:latest \
+            ./mach test-wpt \
+              --${{ inputs.profile }} \
+              --processes $(nproc) \
+              --timeout-multiplier 2 \
+              --total-chunks ${{ inputs.number-of-wpt-chunks }} \
+              --this-chunk ${{ matrix.chunk_id }} \
+              --log-raw wpt-full-logs/linux/raw/${{ inputs.log_raw }}.log \
+              --log-wptreport wpt-full-logs/linux/wptreport/${{ matrix.chunk_id }}.json  \
+              --log-raw-unexpected wpt-filtered-logs/linux/${{ matrix.chunk_id }}.log  \
+              --filter-intermittents wpt-filtered-logs/linux/${{ matrix.chunk_id }}.json ${{ inputs.wpt-args }}
       - name: Archive results (filtered)
         uses: actions/upload-artifact@v4
         if: ${{ always() }}
