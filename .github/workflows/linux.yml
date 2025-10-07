@@ -185,7 +185,7 @@ jobs:
           # commit we are building uses a different rustc version.
           docker  run --rm -v .:/root/src/servo ghcr.io/rodio/servo_bootstrap:latest \
             bash -c "cargo install --path support/crown && ./mach build --use-crown \
-            --locked --${{ inputs.profile }} ${{ inputs.build-args }} && cp -r target/cargo-timings target/cargo-timings-linux"
+              --locked --${{ inputs.profile }} ${{ inputs.build-args }} && cp -r target/cargo-timings target/cargo-timings-linux"
 
       - name: Smoketest
         run: |
