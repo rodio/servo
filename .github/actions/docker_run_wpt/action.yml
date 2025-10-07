@@ -23,29 +23,49 @@ inputs:
   #   description: 'TODO'
   #   required: true
 runs:
-  using: 'docker'
-  image: ghcr.io/rodio/servo_bootstrap:latest
-  pre-entrypoint: 'bash -c "mkdir -p wpt-filtered-logs/linux && mkdir -p wpt-full-logs/linux"'
-  entrypoint: './mach'
-  args:
-    # TODO ALWAYS SUCCEED
-    - 'test-wpt'
-    - --${{ inputs.profile }}
-    # TODO - '--processes $(nproc)'
-    - --timeout-multiplier
-    - 2
-    - --total-chunks
-    - ${{ inputs.number-of-wpt-chunks }}
-    - --this-chunk
-    - ${{ inputs.chunk_id }}
-    - --log-raw
-    - wpt-full-logs/linux/raw/${{ inputs.log_raw }}.log
-    - --log-wptreport
-    - wpt-full-logs/linux/wptreport/${{ inputs.chunk_id }}.json 
-    - --log-raw-unexpected
-    - wpt-filtered-logs/linux/${{ inputs.chunk_id }}.log 
-    - --filter-intermittents
-    - wpt-filtered-logs/linux/${{ inputs.chunk_id }}.json
-    - ${{ inputs.wpt-args }}
-  # env:
-  #   GITHUB_CONTEXT: ${{ toJson(github) }}
+  using: "composite"
+  steps:
+    - name: Run WPT in a container
+      shell: bash
+      run: |
+        mkdir -p wpt-filtered-logs/linux && mkdir -p wpt-full-logs/linux && \
+        docker run --rm -v .:/root/src/servo ghcr.io/rodio/servo_bootstrap:latest \
+          ./mach test-wpt \
+          --processes $(nproc) \
+          --timeout-multiplier 2 \
+          --total-chunks ${{ inputs.number-of-wpt-chunks }} \
+          --this-chunk ${{ inputs.chunk_id }} \
+          --log-raw wpt-full-logs/linux/raw/${{ inputs.log_raw }}.log \
+          --log-wptreport wpt-full-logs/linux/wptreport/${{ inputs.chunk_id }}.json  \
+          --log-raw-unexpected wpt-filtered-logs/linux/${{ inputs.chunk_id }}.log  \
+          --filter-intermittents wpt-filtered-logs/linux/${{ inputs.chunk_id }}.json ${{ inputs.wpt-args }}
+          
+
+      # # env:
+  # #   GITHUB_CONTEXT: ${{ toJson(github) }}
+
+  # image: ghcr.io/rodio/servo_bootstrap:latest
+  # pre-entrypoint: 'bash -c "mkdir -p wpt-filtered-logs/linux && mkdir -p wpt-full-logs/linux"'
+  # entrypoint: './mach'
+  # args:
+  #   # TODO ALWAYS SUCCEED
+  #   - 'test-wpt'
+  #   - --${{ inputs.profile }}
+  #   # TODO - '--processes $(nproc)'
+  #   - --timeout-multiplier
+  #   - 2
+  #   - --total-chunks
+  #   - ${{ inputs.number-of-wpt-chunks }}
+  #   - --this-chunk
+  #   - ${{ inputs.chunk_id }}
+  #   - --log-raw
+  #   - wpt-full-logs/linux/raw/${{ inputs.log_raw }}.log
+  #   - --log-wptreport
+  #   - wpt-full-logs/linux/wptreport/${{ inputs.chunk_id }}.json 
+  #   - --log-raw-unexpected
+  #   - wpt-filtered-logs/linux/${{ inputs.chunk_id }}.log 
+  #   - --filter-intermittents
+  #   - wpt-filtered-logs/linux/${{ inputs.chunk_id }}.json
+  #   - ${{ inputs.wpt-args }}
+  # # env:
+  # #   GITHUB_CONTEXT: ${{ toJson(github) }}
