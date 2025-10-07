@@ -73,7 +73,7 @@ jobs:
         if: ${{ inputs.wpt-sync-from-upstream }}
         run: |
           ./mach update-wpt --sync --patch
-      - uses: ./.github/actions/docker_run_wpt
+      - name: run WPT in a container
         run: |
           mkdir -p wpt-filtered-logs/linux && mkdir -p wpt-full-logs/linux && \
           docker run --rm -v .:/root/src/servo ghcr.io/rodio/servo_bootstrap:latest \
