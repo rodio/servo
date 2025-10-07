@@ -19,12 +19,12 @@ inputs:
   wpt-args:
     description: 'TODO'
     required: true
-  image_tag:
-    description: 'TODO'
-    required: true
+  # image_tag:
+  #   description: 'TODO'
+  #   required: true
 runs:
   using: 'docker'
-  image: bootstrap:latest
+  image: ghcr.io/rodio/servo_bootstrap:latest
   pre-entrypoint: 'bash -c "mkdir -p wpt-filtered-logs/linux && mkdir -p wpt-full-logs/linux"'
   entrypoint: './mach'
   args:

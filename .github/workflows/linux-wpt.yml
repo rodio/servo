@@ -38,13 +38,13 @@ jobs:
         with:
           script: |
             return Array.from({length: ${{ inputs.number-of-wpt-chunks }}}, (_, i) => i + 1)
-  bootstrap-docker:
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: docker/build-push-action@v6
-        with:
-          push: false
-          tags: bootstrap:latest
+  # bootstrap-docker:
+  #   runs-on: ubuntu-22.04
+  #   steps:
+  #     - uses: docker/build-push-action@v6
+  #       with:
+  #         push: false
+  #         tags: bootstrap:latest
   linux-wpt:
     name: WPT
     runs-on: ubuntu-22.04
